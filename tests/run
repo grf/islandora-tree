@@ -33,8 +33,6 @@ def parse_from_files(graph, models_csv, parents_csv)
   STDERR.puts sprintf("Time to load child/parent data from file '%s': %5.2f seconds", parents_csv, secs)
 end
 
-
-
 # secs = timer do
 #   graph.each do |node|
 #     graph.parents(node).each { |nd| nd.color  :internal }
@@ -42,13 +40,20 @@ end
 # end
 # STDERR.puts sprintf("Time to determine the internal nodes: %5.2f seconds", secs)
 
-
-
-
-
+if ARGV.empty?
+  STDERR.puts "usage: ./run model-csv-filename parents-csv-filename"
+  exit -1
+end
 
 graph = IslandoraGraph.new()
-parse_from_files(graph, 'model-states.csv', 'parents.csv')
+parse_from_files(graph, ARGV[0], ARGV[1])
+
+# secs = timer do
+#   graph.each do |node|
+#     graph.parents(node).each { |nd| nd.color  :internal }
+#   end
+# end
+# STDERR.puts sprintf("Time to determine the internal nodes: %5.2f seconds", secs)
 
 secs = timer do
   graph.each do |node|
