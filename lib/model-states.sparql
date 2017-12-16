@@ -1,0 +1,6 @@
+SELECT DISTINCT ?member ?model ?state FROM <#ri>
+WHERE {
+ ?member <info:fedora/fedora-system:def/model#hasModel> ?model ;
+         <fedora-model:state> ?state
+ FILTER ( ?model != <info:fedora/fedora-system:FedoraObject-3.0> )
+}
