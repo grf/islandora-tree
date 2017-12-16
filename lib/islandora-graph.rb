@@ -47,7 +47,7 @@ class IslandoraGraph
     open(filename) do |fh|
       while line = fh.gets
         next unless line =~ /^.*:.*,.*:.*/
-        child_pid, parent_pid = line.strip.split(',')
+        child_pid, parent_pid = line.strip.split(',').map { |pid| clean_pid(pid) }
         @adjacency_list[child_pid] = IslandoraObjectNode.new(child_pid, :missing)  unless @adjacency_list[child_pid]
         @adjacency_list[child_pid].add_parent parent_pid
       end
