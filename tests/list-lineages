@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), '/../lib')
+
+require 'islandora-graph'
+
+def timer()
+  ts = Time.now
+  yield
+  te = Time.now
+  return te - ts
+end
+
+# This is a bit slower than just reading the CSV files in the first place
+def benchmark_binary_storage(filename)
+    secs = timer do
+      open(filename, 'w') do |file|
+        file.print Marshal::dump(graph)
+      end
+    end
+    STDERR.puts sprintf("Time to save marshalled data: %5.2f seconds", secs)
+
+    secs = timer do
+      graph = Marshal.load(File.read(filename))
+    end
+    STDERR.puts sprintf("Time to load marshalled data: %5.2f seconds", secs)
+end
+
+def parse_from_files(graph, models_csv, parents_csv)
+  secs = timer { graph.load_models(models_csv) }
+  STDERR.puts sprintf("Time to load model data from file '%s': %5.2f seconds", models_csv, secs)
+
+  secs = timer { graph.load_relationships(parents_csv) }
+  STDERR.puts sprintf("Time to load child/parent data from file '%s': %5.2f seconds", parents_csv, secs)
+end
+
+def pretty_print_lineages(graph)
+  # if we only want to print the leaves:
+  # graph.each do |node|
+  #   graph.parents(node).each { |nd| nd.color  :internal }
+  # end
+  graph.each do |node|
+    graph.ancestry(node).each do |lineage|
+      # next if lineage.last.colored? :internal
+      puts lineage.map { |node| "#{node.pid}/#{node.state}" }.join(' -> ') + '   [ ' + lineage.last.content_models.join(', ') + ' ]'
+    end
+  end
+end
+
+# main()
+
+
+if ARGV.empty?
+  STDERR.puts "usage: ./run model-csv-filename parents-csv-filename"
+  exit -1
+end
+
+graph = IslandoraGraph.new()
+parse_from_files(graph, ARGV[0], ARGV[1])
+
+secs = timer do
+  pretty_print_lineages(graph)
+end
+STDERR.puts sprintf("Time to determine lineages for each of %s nodes (%s edges): %5.2f seconds", graph.node_count, graph.edge_count, secs)
