@@ -27,7 +27,7 @@ class IslandoraObjectNode
     @colors.uniq!
   end
 
-  def color?(val)
+  def colored?(val)
     return @colors.member? val
   end
 
