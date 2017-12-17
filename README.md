@@ -19,11 +19,11 @@ Then use the utility scripts:
 
 ### Find Orphaned Objects:
 
-``scripts/list-orphans lib/model-states.sparql lib/parents.sparql > orphans.out``
+``scripts/list-orphans model-states.csv parents.csv > orphans.out``
 
 ### List all Ancestors From Parent -> Child
 
-``scripts/list-lineages lib/model-states.sparql lib/parents.sparql > lineages.out``
+``scripts/list-lineages model-states.csv parents.csv > lineages.out``
 
 ## Fix
 
