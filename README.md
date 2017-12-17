@@ -9,9 +9,9 @@ Given that data, we can find orphaned and missing objects, perhaps other degener
 
 In the lib/ folder there are two files that give sparql queries: run them as so:
 
-'''scripts/ri-query model-states.sparql > model-states.csv'''
+''scripts/ri-query lib/model-states.sparql > model-states.csv''
 
-'''scripts/ri-query parents.sparql > parents.csv'''
+''scripts/ri-query lib/parents.sparql > parents.csv''
 
 ## Crunch
 
@@ -19,10 +19,12 @@ Then use the utility scripts:
 
 ### Find Orphaned Objects:
 
-'''scripts/list-orphans model-states.sparql parents.sparql > orphans.out'''
+''scripts/list-orphans lib/model-states.sparql lib/parents.sparql > orphans.out''
 
 ### List all Ancestors From Parent -> Child
 
-'''scripts/list-lineages model-states.sparql parents.sparql > lineages.out'''
+''scripts/list-lineages lib/model-states.sparql lib/parents.sparql > lineages.out'''
+
+## Fix
 
 Check the data and fix inconsistencies.
