@@ -39,7 +39,7 @@ def pretty_print_lineages(graph)
   #   graph.parents(node).each { |nd| nd.color  :internal }
   # end
   graph.each do |node|
-    graph.ancestry(node).each do |lineage|
+    graph.ancestries(node).each do |lineage|
       # next if lineage.last.colored? :internal
       puts lineage.map { |node| "#{node.pid}/#{node.state}" }.join(' -> ') + '   [ ' + lineage.last.content_models.join(', ') + ' ]'
     end

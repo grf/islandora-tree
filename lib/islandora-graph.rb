@@ -63,7 +63,7 @@ class IslandoraGraph
   # left hand side, finally completing the collection of lineages for
   # the leaf node (lineage.last) when there are no more parents.
 
-  def ancestry_helper(collections, *lineage)
+  def ancestries_helper(collections, *lineage)
     our_parents = parents(lineage.first)
     if our_parents.empty? # we're at the top of one of the ancestry chains for this child (lineage.last), bail.
       collections.push lineage
@@ -73,7 +73,7 @@ class IslandoraGraph
           lineage.unshift create_psuedo_node(parent.pid, :loop) # add a special inicator node, bail.
           collections.push lineage
         else
-          ancestry_helper(collections, parent, *lineage) # keep looking for ancestors.
+          ancestries_helper(collections, parent, *lineage) # keep looking for ancestors, adding new lineages for additional parents.
         end
       end
     end
@@ -128,9 +128,9 @@ class IslandoraGraph
     return count
   end
 
-  def ancestry(node)
+  def ancestries(node)
     list = []
-    ancestry_helper(list, node)
+    ancestries_helper(list, node)
     return list
   end
 

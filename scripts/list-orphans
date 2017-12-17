@@ -39,7 +39,7 @@ def pretty_print_lineages(graph)
   #   graph.parents(node).each { |nd| nd.color  :internal }
   # end
   graph.each do |node|
-    graph.ancestry(node).each do |lineage|
+    graph.ancestries(node).each do |lineage|
       # next if lineage.last.colored? :internal
       puts lineage.map { |node| "#{node.pid}/#{node.state}" }.join(' -> ') + '   [ ' + lineage.last.content_models.join(', ') + ' ]'
     end
@@ -57,7 +57,7 @@ end
 
 def find_orphans(graph)
   graph.each do |node|
-    graph.ancestry(node).each do |lineage|
+    graph.ancestries(node).each do |lineage|
       lineage.last.color :reachable  if reachable? lineage
     end
   end
@@ -88,7 +88,7 @@ STDERR.puts sprintf("Time to determine %s orphans out of %s nodes: %5.2f seconds
 
 secs = timer do
   orphans.each do |node|
-    graph.ancestry(node).each do |lineage|
+    graph.ancestries(node).each do |lineage|
       next if lineage.count == 1 and lineage.first.state == :missing
       puts lineage.map { |node| "#{node.pid}/#{node.state}" }.join(' -> ') + '   [ ' + lineage.last.content_models.join(', ') + ' ]'
     end
