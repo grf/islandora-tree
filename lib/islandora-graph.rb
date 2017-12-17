@@ -1,8 +1,6 @@
 $LOAD_PATH.unshift File.dirname(__FILE__)
 require 'islandora-object-node'
 
-
-
 class IslandoraGraph
 
   # We start with two simple CSVs file: first, model data:
@@ -27,6 +25,8 @@ class IslandoraGraph
     @adjacency_list = {}
   end
 
+private 
+  
   def clean_pid(str)
     return str.sub('info:fedora/','')
   end
@@ -39,6 +39,8 @@ class IslandoraGraph
     return str.sub(/.*model#/, '').downcase.intern
   end
 
+  public
+  
   def load_relationships(filename)
     open(filename) do |fh|
       while line = fh.gets
