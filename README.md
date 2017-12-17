@@ -13,7 +13,7 @@ In the lib/ folder there are two files that give sparql queries: run them as so:
 
 ``scripts/ri-query lib/parents.sparql > parents.csv``
 
-The ``ri-query`` program uses ``localhost:8080`` to find the Islandora RDF endpoint: normaly, this means you need to execute the ``ri-timer`` script on the Islandora server.
+The ``ri-query`` program uses ``localhost:8080`` to find the Islandora RDF endpoint: normally, this means you need to execute the ``ri-timer`` script on the Islandora server.
 
 ## Crunch
 
