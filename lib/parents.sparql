@@ -1,9 +1,9 @@
-SELECT DISTINCT ?member ?container FROM <#ri>
+SELECT DISTINCT ?child ?parent FROM <#ri>
 WHERE {
-  { ?member <http://islandora.ca/ontology/relsext#isComponentOf>                    ?container . } UNION
-  { ?member <http://islandora.ca/ontology/relsext#isPageOf>                         ?container . } UNION
-  { ?member <info:fedora/fedora-system:def/relations-external#isConstituentOf>      ?container . } UNION
-  { ?member <info:fedora/fedora-system:def/relations-external#isMemberOf>           ?container . } UNION
-  { ?member <info:fedora/fedora-system:def/relations-external#isMemberOfCollection> ?container . } UNION
-  { ?member <info:fedora/fedora-system:def/relations-external#isPageOf>             ?container ; }
+  { ?child <http://islandora.ca/ontology/relsext#isComponentOf>                    ?parent . } UNION
+  { ?child <http://islandora.ca/ontology/relsext#isPageOf>                         ?parent . } UNION
+  { ?child <info:fedora/fedora-system:def/relations-external#isConstituentOf>      ?parent . } UNION
+  { ?child <info:fedora/fedora-system:def/relations-external#isMemberOf>           ?parent . } UNION
+  { ?child <info:fedora/fedora-system:def/relations-external#isMemberOfCollection> ?parent . } UNION
+  { ?child <info:fedora/fedora-system:def/relations-external#isPageOf>             ?parent ; }
 }
