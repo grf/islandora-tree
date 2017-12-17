@@ -28,3 +28,7 @@ Then use the utility scripts:
 ## Fix
 
 Check the data in the ``out`` files and fix inconsistencies.
+
+## Note
+
+Each step may take several minutes (at the time of this writing we have > 800,000 objects): this is not an interactive process.
