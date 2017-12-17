@@ -42,14 +42,17 @@ class IslandoraGraph
   # list of lists of IslandoraObjectNode's, as in [ grandparent -> parent -> child ], we add parents on the left hand side.
 
   def ancestry_helper(collections, *lineage)
-    ancestors = parents(lineage.first)
-    collections.push lineage if ancestors.empty?
-    ancestors.each do |parent|
-      if lineage.member? parent
-        lineage.unshift create_psuedo_node(parent.pid, :loop)
-        collections.push lineage
-      else
-        ancestry_helper(collections, parent, *lineage)
+    our_parents = parents(lineage.first)
+    if our_parents.empty?
+      collections.push lineage
+    else
+      our_parents.each do |parent|
+        if lineage.member? parent # strictly speaking, the islandora graph is a tree.. but shit (cycles) happen.
+          lineage.unshift create_psuedo_node(parent.pid, :loop)
+          collections.push lineage
+        else
+          ancestry_helper(collections, parent, *lineage)
+        end
       end
     end
   end
