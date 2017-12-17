@@ -134,7 +134,9 @@ class IslandoraGraph
     return list
   end
 
-  # return a list of IslandoraObjectNodes. We create a special missing node, if we don't find one from the model data files.
+  # return a list of IslandoraObjectNodes. We create a special missing
+  # node for a declared pareent, when we don't find that parent in the
+  # model data files.
 
   def parents(node)
     plist = []
