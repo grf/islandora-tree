@@ -5,22 +5,18 @@ require 'islandora-object-node'
 
 class IslandoraGraph
 
-  # We start with a simple sorted CSV file of
-  # "object-pid,content-model,model-state".
+  # We start with two simple CSVs file: first, model data:
   #
-  # Here's one way to generate the CSV files (we could also trundle
-  # through the FoXML files on-disk):
+  # "object-pid,content-model,model-state"
   #
-  # SELECT DISTINCT ?member ?model ?state
-  #            FROM <#ri> WHERE
-  #          { ?member  <info:fedora/fedora-system:def/model#hasModel> ?model ;
-  #                     <fedora-model:state> ?state
-  #            FILTER ( ?model != <info:fedora/fedora-system:FedoraObject-3.0> )
-  #          }
-
-
-  # maintain an adjacency hash
-
+  # and a second that lists parental data:
+  #
+  # "object-pid,parent-pid"
+  #
+  # There can be muliple entries for a given "object-pid".
+  #
+  # Produce an adjacency hash that captures the graph structure, it looks as so:
+  #
   # {
   #   pid => <#node  pid, state, [ content-model* ], [ parent-pid* ]>
   #   pid => <#node  pid, state, [ content-model* ], [ parent-pid* ]>
@@ -111,7 +107,7 @@ class IslandoraGraph
     return IslandoraObjectNode.new(pid, sym)
   end
 
-  # return a list of IslandoraObjectNodes. We create a special missing node, if we don't find one listed.
+  # return a list of IslandoraObjectNodes. We create a special missing node, if we don't find one from the model data files.
 
   def parents(node)
     plist = []
