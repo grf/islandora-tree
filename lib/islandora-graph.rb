@@ -25,8 +25,8 @@ class IslandoraGraph
     @adjacency_list = {}
   end
 
-private 
-  
+  private
+
   def clean_pid(str)
     return str.sub('info:fedora/','')
   end
@@ -39,8 +39,31 @@ private
     return str.sub(/.*model#/, '').downcase.intern
   end
 
+  # list of lists of IslandoraObjectNode's, as in [ grandparent -> parent -> child ], we add parents on the left hand side.
+
+  def ancestry_helper(collections, *lineage)
+    ancestors = parents(lineage.first)
+    collections.push lineage if ancestors.empty?
+    ancestors.each do |parent|
+      if lineage.member? parent
+        lineage.unshift create_psuedo_node(parent.pid, :loop)
+        collections.push lineage
+      else
+        ancestry_helper(collections, parent, *lineage)
+      end
+    end
+  end
+
+  def create_psuedo_node(pid, sym)
+    return IslandoraObjectNode.new(pid, sym)
+  end
+
   public
-  
+
+  def lookup(pid)
+    return @adjacency_list[pid]
+  end
+
   def load_relationships(filename)
     open(filename) do |fh|
       while line = fh.gets
@@ -84,29 +107,6 @@ private
     list = []
     ancestry_helper(list, node)
     return list
-  end
-
-  # list of lists of IslandoraObjectNode's, as in [ grandparent -> parent -> child ], we add parents on the left hand side.
-
-  def ancestry_helper(collections, *lineage)
-    ancestors = parents(lineage.first)
-    collections.push lineage if ancestors.empty?
-    ancestors.each do |parent|
-      if lineage.member? parent
-        lineage.unshift create_psuedo_node(parent.pid, :loop)
-        collections.push lineage
-      else
-        ancestry_helper(collections, parent, *lineage)
-      end
-    end
-  end
-
-  def lookup(pid)
-    return @adjacency_list[pid]
-  end
-
-  def create_psuedo_node(pid, sym)
-    return IslandoraObjectNode.new(pid, sym)
   end
 
   # return a list of IslandoraObjectNodes. We create a special missing node, if we don't find one from the model data files.
