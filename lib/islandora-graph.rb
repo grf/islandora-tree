@@ -5,15 +5,15 @@ class IslandoraGraph
 
   # We start with two simple CSVs file: first, model data:
   #
-  # "object-pid,content-model,model-state"
+  #     "object-pid,content-model,model-state"
   #
   # and a second that lists parental data:
   #
-  # "object-pid,parent-pid"
+  #     "object-pid,parent-pid"
   #
   # There can be muliple entries for a given "object-pid".
-  #
-  # Produce an adjacency hash that captures the graph structure, it looks as so:
+  # Then produce an adjacency hash that captures the graph structure,
+  # it looks as so:
   #
   # {
   #   pid => <#node  pid, state, [ content-model* ], [ parent-pid* ]>
@@ -31,18 +31,37 @@ class IslandoraGraph
     return str.sub('info:fedora/','')
   end
 
+  # clean_model(str) returns these kinds of symbols from the RDF database
+  #
+  # :binaryObjectCModel      :intermediateSerialCModelStub   :rootSerialCModel
+  # :bookCModel              :newspaperCModel                :sp-audioCModel
+  # :citationCModel          :newspaperIssueCModel           :sp_basic_image
+  # :collectionCModel        :newspaperPageCModel            :sp_large_image_cmodel
+  # :compoundCModel          :organizationCModel             :sp_pdf
+  # :entityCModel            :pageCModel                     :sp_videoCModel
+  # :intermediateCModel      :personCModel                   :thesisCModel
+
   def clean_model(str)
     return str.sub(/.*:/, '').intern
   end
+
+  # clean_state(str) typical returns these kinds of symbols from the RDF data:
+  #
+  #    :active, :inactive, :deleted
+  #
+  # and we add
+  #
+  #    :missing and :loop
 
   def clean_state(str)
     return str.sub(/.*model#/, '').downcase.intern
   end
 
+
   # list of lists of IslandoraObjectNode's, specifically a list of
   # lineages [ grandparent -> parent -> child ], we add parents on the
   # left hand side, finally completing the collection of lineages for
-  # the child (lineage.last) when there are no more parents.
+  # the leaf node (lineage.last) when there are no more parents.
 
   def ancestry_helper(collections, *lineage)
     our_parents = parents(lineage.first)
@@ -50,8 +69,8 @@ class IslandoraGraph
       collections.push lineage
     else
       our_parents.each do |parent|
-        if lineage.member? parent # strictly speaking, the islandora graph is a tree.. but shit (cycles) happen. Add a special inicator node, bail.
-          lineage.unshift create_psuedo_node(parent.pid, :loop)
+        if lineage.member? parent # strictly speaking, the islandora graph is a tree.. but shit (cycles) do happen...
+          lineage.unshift create_psuedo_node(parent.pid, :loop) # add a special inicator node, bail.
           collections.push lineage
         else
           ancestry_helper(collections, parent, *lineage) # keep looking for ancestors.
@@ -73,7 +92,7 @@ class IslandoraGraph
   def load_relationships(filename)
     open(filename) do |fh|
       while line = fh.gets
-        next unless line =~ /^.*:.*,.*:.*/
+        next unless line =~ /^info:fedora\/.*,info:fedora\//
         child_pid, parent_pid = line.strip.split(',').map { |pid| clean_pid(pid) }
         @adjacency_list[child_pid] = IslandoraObjectNode.new(child_pid, :missing)  unless @adjacency_list[child_pid]
         @adjacency_list[child_pid].add_parent parent_pid
@@ -84,7 +103,7 @@ class IslandoraGraph
   def load_models(filename)
     open(filename) do |fh|
       while line = fh.gets
-        next unless line =~ /^info:fedora/
+        next unless line =~ /^info:fedora\//
         pid, model, state = line.strip.split(',')
         pid   = clean_pid(pid)
         model = clean_model(model)
