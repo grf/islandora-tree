@@ -39,19 +39,22 @@ class IslandoraGraph
     return str.sub(/.*model#/, '').downcase.intern
   end
 
-  # list of lists of IslandoraObjectNode's, as in [ grandparent -> parent -> child ], we add parents on the left hand side.
+  # list of lists of IslandoraObjectNode's, specifically a list of
+  # lineages [ grandparent -> parent -> child ], we add parents on the
+  # left hand side, finally completing the collection of lineages for
+  # the child (lineage.last) when there are no more parents.
 
   def ancestry_helper(collections, *lineage)
     our_parents = parents(lineage.first)
-    if our_parents.empty?
+    if our_parents.empty? # we're at the top of one of the ancestry chains for this child (lineage.last), bail.
       collections.push lineage
     else
       our_parents.each do |parent|
-        if lineage.member? parent # strictly speaking, the islandora graph is a tree.. but shit (cycles) happen.
+        if lineage.member? parent # strictly speaking, the islandora graph is a tree.. but shit (cycles) happen. Add a special inicator node, bail.
           lineage.unshift create_psuedo_node(parent.pid, :loop)
           collections.push lineage
         else
-          ancestry_helper(collections, parent, *lineage)
+          ancestry_helper(collections, parent, *lineage) # keep looking for ancestors.
         end
       end
     end
