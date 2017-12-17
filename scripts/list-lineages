@@ -48,9 +48,8 @@ end
 
 # main()
 
-
 if ARGV.empty?
-  STDERR.puts "usage: ./run model-csv-filename parents-csv-filename"
+  STDERR.puts "usage: #{File.basename(__FILE__)} model-csv-filename parents-csv-filename"
   exit -1
 end
 
