@@ -1,0 +1,135 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'nokogiri'
+require 'socket'
+
+METADATASTREAM_STORE_ROOT = '/usr/local/fedora/data/objectStore'
+
+Kernel.trap('INT')  { STDERR.puts "Interrupt"    ; exit -2 }
+Kernel.trap('PIPE') { STDERR.puts "Pipe Closed"  ; exit -4 }
+Kernel.trap('HUP')  { "IGNORE" }
+
+STDOUT.sync = true
+
+# namespaces:
+
+FEDORA       = "info:fedora/fedora-system:def/relations-external#"
+FEDORA_MODEL = "info:fedora/fedora-system:def/model#"
+FOXML        = "info:fedora/fedora-system:def/foxml#"
+ISLANDORA    = "http://islandora.ca/ontology/relsext#"
+RDF          = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+
+
+def nope message
+  STDERR.puts message
+  exit -1
+end
+
+
+Struct.new('RelsExt', :pid, :models, :parents, :state)
+
+class RelsExtSaxDocument < Nokogiri::XML::SAX::Document
+  attr_accessor :rels_ext
+
+  def initialize()
+    @parents = []
+    @rels_ext = nil
+    @rels_ext_context = nil
+    super()
+  end
+
+  # We're only interested in parsing out parts of the FOXML that are
+  # relevant to finding parent objects and the relationships to them
+
+  def start_element_namespace(name, attributes = [], prefix = nil, uri = nil, ns = [])
+
+    # We have to keep track if we're in a section of the FoXML that
+    # presents RDF data, a RELS-EXT section.
+
+    if (name == 'datastream' and uri == FOXML)
+      attributes.each do |a|
+        if a.localname == 'ID' and uri == FOXML
+          @rels_ext_context = (a.value == 'RELS-EXT')
+          return
+        end
+      end
+    end
+
+    # <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+
+    if (name == 'property' and uri == FOXML)
+      # We need to answer two questions: are we in a model#state property element? and what's the value, active, deleted, etc
+      found_state = false
+      maybe_state_value = nil
+      attributes.each do |a|
+        if a.localname = 'NAME' and a.value == 'info:fedora/fedora-system:def/model#state'
+          found_state  = true
+        end
+        if a.localname = 'VALUE'
+          maybe_state_value = 'info:fedora/fedora-system:def/model#' + a.value
+        end
+      end
+      @state = maybe_state_value if found_state
+    end
+
+    return unless @rels_ext_context
+
+    case
+    # <rdf:Description rdf:about="info:fedora/fau:13562">
+    #   <fedora-model:hasModel rdf:resource="info:fedora/islandora:compoundCModel"></fedora-model:hasModel>
+    #   <fedora:isMemberOfCollection rdf:resource="info:fedora/fau:pcre"></fedora:isMemberOfCollection>
+    # ....
+
+    #     <foxml:datastream ID="RELS-INT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
+
+    when (name == 'Description' and uri == RDF)
+      @rels_ext  = Struct::RelsExt.new
+      @rels_ext.models = []
+      @rels_ext.state = @state
+      @rels_ext.parents = []
+      attributes.each do |a|
+        @rels_ext.pid = a.value if a.localname == 'about'
+      end
+
+    when (name == 'hasModel' and uri = FEDORA_MODEL)
+      attributes.each do |a|
+        @rels_ext.models.push a.value if a.localname == 'resource'
+      end
+
+    else
+      if (uri == ISLANDORA and [ 'isPageOf', 'isComponentOf' ].member? name) or
+        (uri == FEDORA    and [ 'isMemberOf', 'isMemberOfCollection', 'isPageOf', 'isConstituentOf' ].member? name)
+        attributes.each do |a|
+          if a.localname == 'resource' and a.uri == RDF
+            @rels_ext.parents.push( { name.intern => a.value } )
+          end
+        end
+      end
+    end
+  end
+end
+
+# MAIN
+
+
+document = RelsExtSaxDocument.new()
+
+
+csv_models = open('test-model-states.csv', 'w')
+csv_parents = open('test-parents.csv', 'w')
+
+ARGV.each do | filename |
+  begin
+    Nokogiri::XML::SAX::Parser.new(document).parse(File.read(filename))
+    re = document.rels_ext
+    ppids = []
+    re.parents.each do |rec|
+      ppids += rec.values
+    end
+    ppids.uniq.each { |ppid| csv_parents.puts [ re.pid, ppid ].join(',') }
+    re.models.each  { |model|  csv_models.puts  [ re.pid, model, re.state ].join(',') }
+  rescue => e
+    STDERR.puts "error when parsing #{filename}: #{e.message}"
+  end
+end
