@@ -2,6 +2,7 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '/../lib')
 
 require 'islandora-graph'
+TIMING = true
 
 def timer()
   ts = Time.now
@@ -17,20 +18,20 @@ def benchmark_binary_storage(filename)
         file.print Marshal::dump(graph)
       end
     end
-    STDERR.puts sprintf("Time to save marshalled data: %5.2f seconds", secs)
+    STDERR.puts sprintf("Time to save marshalled data: %5.2f seconds", secs) if TIMING
 
     secs = timer do
       graph = Marshal.load(File.read(filename))
     end
-    STDERR.puts sprintf("Time to load marshalled data: %5.2f seconds", secs)
+    STDERR.puts sprintf("Time to load marshalled data: %5.2f seconds", secs) if TIMING
 end
 
 def parse_from_files(graph, models_csv, parents_csv)
   secs = timer { graph.load_models(models_csv) }
-  STDERR.puts sprintf("Time to load model data from file '%s': %5.2f seconds", models_csv, secs)
+  STDERR.puts sprintf("Time to load model data from file '%s': %5.2f seconds", models_csv, secs) if TIMING
 
   secs = timer { graph.load_relationships(parents_csv) }
-  STDERR.puts sprintf("Time to load child/parent data from file '%s': %5.2f seconds", parents_csv, secs)
+  STDERR.puts sprintf("Time to load child/parent data from file '%s': %5.2f seconds", parents_csv, secs) if TIMING
 end
 
 def pretty_print_lineages(graph)
@@ -59,4 +60,4 @@ parse_from_files(graph, ARGV[0], ARGV[1])
 secs = timer do
   pretty_print_lineages(graph)
 end
-STDERR.puts sprintf("Time to determine lineages for each of %s nodes (%s edges): %5.2f seconds", graph.node_count, graph.edge_count, secs)
+STDERR.puts sprintf("Time to determine lineages for each of %s nodes (%s edges): %5.2f seconds", graph.node_count, graph.edge_count, secs)  if TIMING
