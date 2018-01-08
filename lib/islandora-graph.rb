@@ -49,14 +49,13 @@ class IslandoraGraph
   #
   #    :active, :inactive, :deleted
   #
-  # and we add
+  # and we will add
   #
-  #    :missing and :loop
+  #    :missing and :loop as psuedo-states for error conditions
 
   def clean_state(str)
     return str.sub(/.*model#/, '').downcase.intern
   end
-
 
   # list of lists of IslandoraObjectNode's, specifically a list of
   # lineages [ grandparent -> parent -> child ], we add parents on the
@@ -105,13 +104,15 @@ class IslandoraGraph
       while line = fh.gets
         next unless line =~ /^info:fedora\//
         pid, model, state = line.strip.split(',')
+
         pid   = clean_pid(pid)
         model = clean_model(model)
         state = clean_state(state)
+
         if node = @adjacency_list[pid]
           node.add_content_model model
-          node.content_models.delete_if { |redundant| redundant == :entityCModel }
-        else
+          node.content_models.delete_if { |redundant| redundant == :entityCModel } # TODO: should do this later all, only if there
+        else                                                                       # are more than one model and one is :entityCModel
           @adjacency_list[pid] = IslandoraObjectNode.new(pid, state, model)
         end
       end
