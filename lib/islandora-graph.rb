@@ -100,6 +100,12 @@ class IslandoraGraph
   end
 
   def load_models(filename)
+    stop_list = {
+      clean_model("info:fedora/fedora-system:ContentModel-3.0")      => true,
+      clean_model("info:fedora/fedora-system:ServiceDefinition-3.0") => true,
+      clean_model("info:fedora/fedora-system:ServiceDeployment-3.0") => true,
+    }
+
     open(filename) do |fh|
       while line = fh.gets
         next unless line =~ /^info:fedora\//
@@ -108,6 +114,8 @@ class IslandoraGraph
         pid   = clean_pid(pid)
         model = clean_model(model)
         state = clean_state(state)
+
+        next if stop_list[model]
 
         if node = @adjacency_list[pid]
           node.add_content_model model
