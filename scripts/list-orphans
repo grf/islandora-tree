@@ -46,12 +46,24 @@ def pretty_print_lineages(graph)
   end
 end
 
+
+VALID_ROOTS = [ 'fsu:root', 'islandora:root' ]
+
 # We get a list of nodes from parent -> child. Check if anything in
 # the parentage would disable the child from being reached through a
-# parent.
+# parent - and make sure the root parent is valid.
 
-def reachable?(list)
-  list[0..-2].each { |ancestor| return false if ancestor.state != :active }
+def reachable?(lineage)
+  lineage[0..-2].each do |ancestor|
+    return false if ancestor.state != :active
+  end
+
+  root = lineage.first
+  if not VALID_ROOTS.member? root.pid
+    root.state = :disconnected
+    return false
+  end
+
   return true
 end
 
@@ -89,7 +101,11 @@ STDERR.puts sprintf("Time to determine %s orphans out of %s nodes: %5.2f seconds
 secs = timer do
   orphans.each do |node|
     graph.ancestries(node).each do |lineage|
+      # if it's missing and not part of a parent -> child chain, then skip: it's not in our list of
+      # existing objects: we are only aware of it because it is listed as the parent of an existing object
+      # and so will be reported as a parent in the lineage of that existing object:
       next if lineage.count == 1 and lineage.first.state == :missing
+
       puts lineage.map { |node| "#{node.pid}/#{node.state}" }.join(' -> ') + '   [ ' + lineage.last.content_models.join(', ') + ' ]'
     end
   end
