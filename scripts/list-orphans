@@ -60,7 +60,7 @@ def reachable?(lineage)
 
   root = lineage.first
   if not VALID_ROOTS.member? root.pid
-    root.state = :disconnected
+    root.state = :badroot
     return false
   end
 
